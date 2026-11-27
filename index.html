@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ジャグラー管理">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>ジャグラー台管理</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#151d30;--panel2:#202b42;--line:#34415b;--muted:#9eabc2;--text:#f5f7fb;--accent:#66d9c2}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif}
+header{position:sticky;top:0;z-index:5;background:#10182aee;backdrop-filter:blur(12px);padding:12px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{font-size:17px;margin:0;font-weight:800}.sub{font-size:11px;color:var(--muted);margin-top:3px}
+button,select,input,textarea{font:inherit}button{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:10px;padding:9px 11px;font-weight:700}
+button:active{transform:scale(.98)}.primary{background:#176c63;border-color:#238e80}.small{padding:6px 8px;font-size:12px}
+main{padding:12px;max-width:1000px;margin:auto}.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.toolbar label{font-size:12px;color:var(--muted)}select,input,textarea{background:#0d1526;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px;min-width:0}
+#time{font-weight:800;font-size:16px}.floor{background:#111a2b;border:1px solid var(--line);border-radius:15px;padding:12px;overflow:hidden}
+.girls{width:76%;margin-left:auto;margin-bottom:18px}.model-title{font-size:11px;color:#c0cbe0;text-align:center;border-bottom:1px solid #77849c;padding:0 2px 5px;margin:0 0 7px;white-space:nowrap}
+.machine-row{display:flex;justify-content:center;gap:5px;flex-wrap:nowrap}.girls .machine-row{justify-content:flex-end}
+.islands{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.island{min-width:0;border-left:1px solid #34415b;padding-left:6px}.island:first-child{border:0;padding-left:0}
+.group{margin-bottom:12px}.group:last-child{margin-bottom:0}
+.machine{position:relative;min-width:0;flex:1;max-width:48px;height:43px;padding:3px 1px;border-radius:7px;border:1px solid #53617a;background:#f1f4f8;color:#101827;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.machine .num{font-size:12px;font-weight:900;line-height:1}.machine .setting{font-size:15px;font-weight:1000;color:#fff;line-height:1;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 0 3px #000}
+.machine.s3{background:#269b65}.machine.s4{background:#2776cf}.machine.s5{background:#e4bd32}.machine.s6{background:#d94a4a}.machine.sq{background:#8054c8}
+.machine.selected{outline:2px solid var(--accent);outline-offset:2px}
+.hint{font-size:11px;color:var(--muted);margin:10px 2px 0}
+.backdrop{position:fixed;inset:0;background:#0009;z-index:10;opacity:0;pointer-events:none;transition:.2s}
+.drawer{position:fixed;z-index:11;top:0;right:0;height:100dvh;width:min(430px,94vw);background:#111a2b;border-left:1px solid var(--line);padding:16px;overflow:auto;transform:translateX(102%);transition:.25s}
+.drawer.open{transform:translateX(0)}.backdrop.open{opacity:1;pointer-events:auto}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.drawer h2{font-size:18px;margin:0}.section{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin:10px 0}
+.section h3{font-size:13px;margin:0 0 9px;color:#d9e2f2}.field{display:grid;gap:6px;margin:9px 0}.field label{font-size:12px;color:var(--muted)}
+.settings{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.settings button{padding:10px 0}.settings button.active{border-color:var(--accent);background:#15594f}
+.tags{display:flex;gap:6px;flex-wrap:wrap}.tag{font-size:12px;padding:7px 9px;border-radius:20px}.tag.active{background:#176c63;border-color:#55c7b4}
+.specgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}.spec{background:#0d1526;border-radius:9px;padding:9px;font-size:12px}.spec b{display:block;font-size:11px;color:var(--muted);margin-bottom:4px}
+.history-item{display:flex;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding:8px 0;font-size:12px}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.actions button{flex:1}
+footer{padding:16px;text-align:center;color:var(--muted);font-size:11px}
+@media(max-width:520px){main{padding:8px}.floor{padding:8px}.islands{gap:5px}.island{padding-left:4px}.machine{height:40px;max-width:none;border-radius:6px}.machine .num{font-size:11px}.machine .setting{font-size:14px}.model-title{font-size:9px}.girls{width:79%}.machine-row{gap:3px}}
+</style>
+</head>
+<body>
+<header><div><h1>🎰 ジャグラー台管理</h1><div class="sub">台ごとの設定・メモ・履歴を記録</div></div><button class="small" id="backupTop">バックアップ</button></header>
+<main>
+ <div class="toolbar">
+  <label for="time">記録時間</label><select id="time"></select>
+  <button class="small" id="exportBtn">書き出し</button><button class="small" id="importBtn">読み込み</button>
+  <input id="fileInput" type="file" accept="application/json,.json" hidden>
+ </div>
+ <div class="floor" id="floor">
+  <div class="girls group"><div class="model-title">ガールズSS</div><div class="machine-row" id="girlsRow"></div></div>
+  <div class="islands" id="islands"></div>
+ </div>
+ <div class="hint">台をタップすると右側に入力画面が開きます。設定は時間ごとに保存されます。</div>
+</main>
+<div class="backdrop" id="backdrop"></div>
+<aside class="drawer" id="drawer">
+ <div class="drawer-head"><div><h2 id="drawerTitle">台情報</h2><div class="sub" id="drawerModel"></div></div><button id="closeDrawer">閉じる</button></div>
+ <div class="toolbar"><label for="drawerTime">時間</label><select id="drawerTime"></select></div>
+ <div class="section"><h3>設定</h3><div class="settings" id="settings"></div><div class="sub" style="margin-top:8px">未選択は設定だけを消し、メモ・タグは残します。</div></div>
+ <div class="section"><h3>メモ</h3><textarea id="memo" rows="3" style="width:100%" placeholder="気づいたことなど"></textarea></div>
+ <div class="section"><h3>タグ</h3><div class="tags" id="tags"></div></div>
+ <div class="section"><h3>設定別スペック（設定1 / 設定6）</h3><div class="specgrid" id="specs"></div></div>
+ <div class="section"><h3>高設定履歴</h3><div class="field"><label>日付</label><input type="date" id="historyDate"></div><div class="field"><label>設定</label><select id="historySetting"><option value="4">設定4</option><option value="5">設定5</option><option value="6">設定6</option></select></div><button class="primary" id="addHistory" style="width:100%">履歴に追加</button><div id="historyList" style="margin-top:8px"></div></div>
+ <div class="actions"><button id="clearSetting">設定のみ解除</button><button class="primary" id="saveClose">保存して閉じる</button></div>
+</aside>
+<footer>データはこの端末内に保存されます。端末を変える場合はバックアップを利用してください。</footer>
+<script>
+const STORAGE_KEY='juggler_settings_prototype_v1';
+const times=Array.from({length:15},(_,i)=>String(i+9).padStart(2,'0')+':00');
+const machines=[];
+function add(model,nums){nums.forEach(n=>machines.push({id:String(n),num:n,model}));}
+add('ガールズSS',[589,590,591,592,593,594]);
+add('ファンキージャグラー2',[530,529,528,527,526,525,524,523,522]);
+add('ゴーゴージャグラー3',[521,520,519,518,517,516,515]);
+add('ファンキージャグラー2',[531,532,533,534,535,536,537]);
+add('ハッピージャグラーVⅢ',[538,539,540,541]);
+add('ミスタージャグラー',[542,543,544,545]);
+add('ネオアイムジャグラーEX',[588,587,586,585,584,583,582,581,580,579,578,577,576,575,574]);
+add('ネオアイムジャグラーEX',[595,596,597,598,599,600,601,602,603,604,605]);
+add('マイジャグラーV',[606,607]);
+add('マイジャグラーVI',[608,609,610,611,612,613]);
+const specs={
+'ファンキージャグラー2':{bb:['1/266.4','1/219.9'],reg:['1/439.8','1/262.1'],total:['1/165.9','1/119.6'],grape:['1/5.94','1/5.67']},
+'ゴーゴージャグラー3':{bb:['1/259.0','1/234.9'],reg:['1/354.2','1/234.9'],total:['1/149.6','1/117.4'],grape:['1/6.25','1/5.92']},
+'ハッピージャグラーVⅢ':{bb:['1/287.4','1/240.9'],reg:['1/397.2','1/273.1'],total:['1/161.8','1/120.0'],grape:['1/6.05','1/5.79']},
+'ミスタージャグラー':{bb:['1/268.6','1/237.4'],reg:['1/374.5','1/237.4'],total:['1/156.4','1/118.7'],grape:['1/6.29','1/5.96']},
+'ネオアイムジャグラーEX':{bb:['1/273.1','1/255.0'],reg:['1/439.8','1/255.0'],total:['1/168.5','1/127.5'],grape:['1/6.03','1/5.79']},
+'マイジャグラーV':{bb:['1/273.1','1/229.1'],reg:['1/409.6','1/229.1'],total:['1/163.8','1/114.6'],grape:['1/5.90','1/5.69']},
+'マイジャグラーVI':{bb:['暫定','暫定'],reg:['暫定','暫定'],total:['暫定','暫定'],grape:['1/5.89','1/5.67']},
+'ガールズSS':{bb:['1/273.1','1/226.0'],reg:['1/381.0','1/252.1'],total:['1/159.1','1/119.2'],grape:['1/5.98','1/5.83']}
+};
+const tagNames=['朝イチ','高設定候補','REG先行','合算良好','ぶどう良好','要確認','ヤメ'];
+let db=loadDB(), selected=null, selectedTime='09:00';
+function loadDB(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}')}catch(e){return {}}}
+function saveDB(){localStorage.setItem(STORAGE_KEY,JSON.stringify(db));}
+function ensureRecord(id,t){db[id]??={records:{},history:[]};db[id].records??={};db[id].records[t]??={setting:'',memo:'',tags:[]};return db[id].records[t]}
+function initTimes(){[document.getElementById('time'),document.getElementById('drawerTime')].forEach(s=>{s.innerHTML=times.map(t=>`<option>${t}</option>`).join('');s.value=selectedTime})}
+function modelGroups(){return [
+ [{model:'ファンキージャグラー2',nums:[530,529,528,527,526,525,524,523,522]},{model:'ゴーゴージャグラー3',nums:[521,520,519,518,517,516,515]}],
+ [{model:'ファンキージャグラー2',nums:[531,532,533,534,535,536,537]},{model:'ハッピージャグラーVⅢ',nums:[538,539,540,541]},{model:'ミスタージャグラー',nums:[542,543,544,545]}],
+ [{model:'ネオアイムジャグラーEX',nums:[588,587,586,585,584,583,582,581,580,579,578,577,576,575,574]}],
+ [{model:'ネオアイムジャグラーEX',nums:[595,596,597,598,599,600,601,602,603,604,605]},{model:'マイジャグラーV',nums:[606,607]},{model:'マイジャグラーVI',nums:[608,609,610,611,612,613]}]
+]}
+function tile(m){const r=ensureRecord(m.id,selectedTime);const s=r.setting;const cls=s?`s${s==='?'?'q':s}`:'';return `<button class="machine ${cls} ${selected?.id===m.id?'selected':''}" data-id="${m.id}"><span class="num">${m.num}</span><span class="setting">${s||''}</span></button>`}
+function renderFloor(){
+ document.getElementById('girlsRow').innerHTML=machines.filter(m=>m.model==='ガールズSS').map(tile).join('');
+ const root=document.getElementById('islands');root.innerHTML='';
+ modelGroups().forEach(groups=>{const col=document.createElement('div');col.className='island';groups.forEach(g=>{const box=document.createElement('div');box.className='group';box.innerHTML=`<div class="model-title">${g.model}</div><div class="machine-row">${g.nums.map(n=>tile(machines.find(m=>m.num===n))).join('')}</div>`;col.appendChild(box)});root.appendChild(col)});
+ document.querySelectorAll('.machine').forEach(b=>b.addEventListener('click',()=>openMachine(b.dataset.id)));
+}
+function openMachine(id){selected=machines.find(m=>m.id===id);selectedTime=document.getElementById('time').value;document.getElementById('drawerTitle').textContent=`台番号 ${selected.num}`;document.getElementById('drawerModel').textContent=selected.model;document.getElementById('drawerTime').value=selectedTime;renderDrawer();document.getElementById('drawer').classList.add('open');document.getElementById('backdrop').classList.add('open')}
+function closeDrawer(){commitRecord();document.getElementById('drawer').classList.remove('open');document.getElementById('backdrop').classList.remove('open');renderFloor()}
+function commitRecord(){if(!selected)return;const r=ensureRecord(selected.id,selectedTime);r.memo=document.getElementById('memo').value;r.tags=[...document.querySelectorAll('#tags .active')].map(b=>b.dataset.tag);saveDB()}
+function renderDrawer(){const r=ensureRecord(selected.id,selectedTime);
+ document.getElementById('settings').innerHTML=['未選択','1','2','3','4','5','6','?'].map(s=>`<button data-setting="${s}" class="${r.setting===s||(!r.setting&&s==='未選択')?'active':''}">${s}</button>`).join('');
+ document.querySelectorAll('#settings button').forEach(b=>b.onclick=()=>{commitRecord();const v=b.dataset.setting;ensureRecord(selected.id,selectedTime).setting=v==='未選択'?'':v;saveDB();renderDrawer();renderFloor()});
+ document.getElementById('memo').value=r.memo||'';
+ document.getElementById('tags').innerHTML=tagNames.map(t=>`<button class="tag ${r.tags?.includes(t)?'active':''}" data-tag="${t}">${t}</button>`).join('');
+ document.querySelectorAll('#tags button').forEach(b=>b.onclick=()=>{b.classList.toggle('active');commitRecord()});
+ renderSpecs();renderHistory();
+}
+function renderSpecs(){const s=specs[selected.model];const labels=[['BIG',s.bb],['REG',s.reg],['合算',s.total],['ぶどう',s.grape]];document.getElementById('specs').innerHTML=labels.map(([n,v])=>`<div class="spec"><b>${n}</b>設定1：${v[0]}<br>設定6：${v[1]}</div>`).join('')}
+function renderHistory(){const h=db[selected.id]?.history||[];document.getElementById('historyList').innerHTML=h.length?h.slice().reverse().map((x,i)=>`<div class="history-item"><span>${x.date}　設定${x.setting}</span><button class="small" data-del="${h.length-1-i}">削除</button></div>`).join(''):'<div class="sub">履歴はまだありません</div>';document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{db[selected.id].history.splice(Number(b.dataset.del),1);saveDB();renderHistory()})}
+document.getElementById('addHistory').onclick=()=>{if(!selected)return;const date=document.getElementById('historyDate').value||new Date().toISOString().slice(0,10);db[selected.id]??={records:{},history:[]};db[selected.id].history??=[];db[selected.id].history.push({date,setting:document.getElementById('historySetting').value});saveDB();renderHistory()};
+document.getElementById('drawerTime').onchange=e=>{commitRecord();selectedTime=e.target.value;document.getElementById('time').value=selectedTime;renderDrawer();renderFloor()};
+document.getElementById('time').onchange=e=>{selectedTime=e.target.value;if(selected){commitRecord();document.getElementById('drawerTime').value=selectedTime;renderDrawer()}renderFloor()};
+document.getElementById('clearSetting').onclick=()=>{ensureRecord(selected.id,selectedTime).setting='';saveDB();renderDrawer();renderFloor()};
+document.getElementById('saveClose').onclick=closeDrawer;document.getElementById('closeDrawer').onclick=closeDrawer;document.getElementById('backdrop').onclick=closeDrawer;
+function exportData(){commitRecord();const blob=new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),data:db},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='juggler-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href)}
+document.getElementById('exportBtn').onclick=exportData;document.getElementById('backupTop').onclick=exportData;document.getElementById('importBtn').onclick=()=>document.getElementById('fileInput').click();
+document.getElementById('fileInput').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const parsed=JSON.parse(await f.text());const incoming=parsed.data||parsed;if(!confirm('現在のデータにバックアップ内容を読み込みます。よろしいですか？'))return;db=incoming;saveDB();renderFloor();if(selected)renderDrawer();alert('読み込みました！')}catch(err){alert('ファイルを読み込めませんでした。JSONバックアップを確認してください。')}e.target.value=''};
+initTimes();renderFloor();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body></html>
